@@ -1,5 +1,7 @@
 # Waypoint
 
+**Live Demo:** [waypoint-tasks.vercel.app](https://waypoint-tasks.vercel.app)
+
 Waypoint is a beautifully designed, location-aware task application. It allows you to drop pins on a map, attach tasks to those locations, and get notified the moment you enter the radius of your saved locations using background geofencing.
 
 ## Features
