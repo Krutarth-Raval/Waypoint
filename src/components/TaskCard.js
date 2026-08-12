@@ -75,8 +75,8 @@ export default function TaskCard({ task, onDelete, isDeleting, isHighlighted = f
 
       {/* Foreground Card */}
       <div 
-        className={`backdrop-blur-xl p-5 md:p-6 transition-colors group relative flex flex-col justify-between rounded-[1.5rem] md:rounded-[2rem] w-full border
-          ${isHighlighted ? 'bg-primary/5 border-primary/30 shadow-md shadow-primary/5 scale-[1.01]' : 'bg-card/90 border-border/50 hover:border-primary/50 shadow-sm'}
+        className={`p-5 md:p-6 transition-colors group relative flex flex-col justify-between rounded-[1.5rem] md:rounded-[2rem] w-full border
+          ${isHighlighted ? 'bg-primary/5 border-primary/30 shadow-md shadow-primary/5 scale-[1.01]' : 'bg-card border-border/50 hover:border-primary/50 shadow-sm'}
           ${startX === null ? 'transition-transform duration-300 ease-out' : 'transition-none'}
         `}
         style={{ transform: `translateX(${offset}px)` }}
