@@ -75,8 +75,8 @@ export default function TaskCard({ task, onDelete, isDeleting, isHighlighted = f
 
       {/* Foreground Card */}
       <div 
-        className={`p-5 md:p-6 transition-colors group relative flex flex-col justify-between rounded-[1.5rem] md:rounded-[2rem] w-full border
-          ${isHighlighted ? 'bg-primary/5 border-primary/30 shadow-md shadow-primary/5 scale-[1.01]' : 'bg-card border-border/50 hover:border-primary/50 shadow-sm'}
+        className={`p-5 md:p-6 transition-colors group relative flex flex-col justify-between rounded-[1.5rem] md:rounded-[2rem] w-full border bg-card
+          ${isHighlighted ? 'border-primary/30 shadow-md shadow-primary/5 scale-[1.01]' : 'border-border/50 hover:border-primary/50 shadow-sm'}
           ${startX === null ? 'transition-transform duration-300 ease-out' : 'transition-none'}
         `}
         style={{ transform: `translateX(${offset}px)` }}
@@ -84,6 +84,9 @@ export default function TaskCard({ task, onDelete, isDeleting, isHighlighted = f
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
+        {/* Tint overlay for highlighted tasks */}
+        {isHighlighted && <div className="absolute inset-0 bg-primary/5 rounded-[1.5rem] md:rounded-[2rem] pointer-events-none" />}
+        
         <div className="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors pointer-events-none -mr-10 -mt-10" />
         
         <div>
