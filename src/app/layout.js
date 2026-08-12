@@ -19,8 +19,35 @@ import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = {
-  title: "Waypoint",
-  description: "Location-aware task application",
+  metadataBase: new URL('https://waypoint-tasks.vercel.app'),
+  title: {
+    default: 'Waypoint - Location-Aware Tasks',
+    template: '%s | Waypoint'
+  },
+  description: 'Waypoint alerts you to your tasks exactly when and where you need them using intelligent geofencing and background location tracking.',
+  keywords: ['location-based tasks', 'geofencing', 'to-do list', 'productivity', 'task manager', 'reminders'],
+  authors: [{ name: 'Waypoint Team' }],
+  creator: 'Waypoint',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://waypoint-tasks.vercel.app',
+    title: 'Waypoint - Location-Aware Tasks',
+    description: 'Get notified the second you arrive at your destination. A geofence-powered task manager.',
+    siteName: 'Waypoint',
+    images: [{
+      url: '/hero-illustration.png',
+      width: 1200,
+      height: 630,
+      alt: 'Waypoint App Preview'
+    }]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Waypoint - Location-Aware Tasks',
+    description: 'Get notified the second you arrive at your destination. A geofence-powered task manager.',
+    images: ['/hero-illustration.png'],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
