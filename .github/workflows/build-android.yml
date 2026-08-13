@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: '17' # Android requires Java 17
+          java-version: '21' # Modern Android builds require Java 21
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
