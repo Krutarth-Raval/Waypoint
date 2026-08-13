@@ -29,6 +29,13 @@ jobs:
       - name: Install Node Modules
         run: bun install
 
+      - name: Generate App Icons
+        run: |
+          mkdir -p assets
+          cp public/logo.png assets/icon.png
+          cp public/hero-illustration.png assets/splash.png
+          bunx @capacitor/assets generate
+
       - name: Sync Capacitor
         run: npx @capacitor/cli sync android
 
