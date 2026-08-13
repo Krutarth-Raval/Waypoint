@@ -28,11 +28,15 @@ export default function TopNavbar({ isAuthenticated, user }) {
     }
   }, []);
 
-  const navItems = [
-    { href: "/", label: "Now" },
-    { href: "/places", label: "Places" },
-    { href: "/tasks", label: "Tasks" },
-  ];
+  const navItems = [];
+
+  if (isAuthenticated) {
+    navItems.push(
+      { href: "/", label: "Now" },
+      { href: "/places", label: "Places" },
+      { href: "/tasks", label: "Tasks" }
+    );
+  }
 
   if (!isNative) {
     navItems.push({ href: "/download", label: "Download App" });
@@ -46,7 +50,7 @@ export default function TopNavbar({ isAuthenticated, user }) {
             <Logo className="text-2xl md:text-[28px]" />
           </Link>
           
-          {isAuthenticated && (
+          {navItems.length > 0 && (
             <nav className="hidden md:flex gap-6">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
