@@ -126,6 +126,46 @@ export async function initGeofencing(tasks) {
   }
 }
 
+// Dev helper to test notification UI without walking outside
+export async function testNotification() {
+  if (typeof window === 'undefined') return;
+  try {
+    const { LocalNotifications } = await import('@capacitor/local-notifications');
+    
+    if (Capacitor.getPlatform() === 'android') {
+      try {
+        await LocalNotifications.createChannel({
+          id: 'geofence_alerts',
+          name: 'Geofence Alerts',
+          description: 'Notifications for arriving and leaving tasks',
+          importance: 4, // High importance
+          visibility: 1, // Public visibility
+        });
+      } catch (e) {
+        console.error('Error creating notification channel:', e);
+      }
+    }
+
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          title: '📍 Arrived at Test Location',
+          body: 'This is a test geofence notification!',
+          id: Math.floor(Math.random() * 1000000),
+          channelId: 'geofence_alerts',
+        }
+      ]
+    });
+    console.log("Test notification scheduled successfully!");
+  } catch (e) {
+    console.error("Test notification failed:", e);
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.testGeofenceNotification = testNotification;
+}
+
 const TASKS_KEY = 'waypoint_active_tasks';
 
 function getActiveTasksFromStorage() {
