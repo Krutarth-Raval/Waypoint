@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MapPin, LogOut } from "lucide-react";
@@ -16,12 +16,27 @@ export default function TopNavbar({ isAuthenticated, user }) {
     return null;
   }
 
+  const [isNative, setIsNative] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isCapacitor = window.Capacitor?.isNativePlatform();
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      if (isCapacitor || isStandalone) {
+        setIsNative(true);
+      }
+    }
+  }, []);
+
   const navItems = [
     { href: "/", label: "Now" },
     { href: "/places", label: "Places" },
     { href: "/tasks", label: "Tasks" },
-    { href: "/download", label: "Download App" },
   ];
+
+  if (!isNative) {
+    navItems.push({ href: "/download", label: "Download App" });
+  }
 
   return (
     <div className="sticky top-4 z-50 w-full px-4 md:px-8 flex justify-center pointer-events-none">

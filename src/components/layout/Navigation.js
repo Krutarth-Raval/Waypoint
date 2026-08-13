@@ -12,12 +12,30 @@ export default function Navigation({ user }) {
   
   if (pathname === '/login') return null;
 
+  const [isNative, setIsNative] = useState(false);
+
+  // Check if we are running in the Capacitor app or PWA
+  import('react').then(({ useEffect }) => {
+    useEffect(() => {
+      if (typeof window !== 'undefined') {
+        const isCapacitor = window.Capacitor?.isNativePlatform();
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+        if (isCapacitor || isStandalone) {
+          setIsNative(true);
+        }
+      }
+    }, []);
+  });
+
   const navItems = [
     { href: "/", label: "Now", icon: Home },
     { href: "/places", label: "Places", icon: MapPin },
     { href: "/tasks", label: "Tasks", icon: CheckSquare },
-    { href: "/download", label: "App", icon: Download },
   ];
+
+  if (!isNative) {
+    navItems.push({ href: "/download", label: "App", icon: Download });
+  }
 
   return (
     <>
