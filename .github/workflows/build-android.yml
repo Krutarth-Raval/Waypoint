@@ -32,7 +32,7 @@ jobs:
       - name: Generate App Icons
         run: |
           mkdir -p assets
-          cp public/logo.png assets/icon.png
+          cp public/favicon.ico assets/icon.png
           cp public/hero-illustration.png assets/splash.png
           bunx @capacitor/assets generate
 
