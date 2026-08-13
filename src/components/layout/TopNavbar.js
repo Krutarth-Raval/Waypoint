@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MapPin, LogOut } from "lucide-react";
+import { MapPin, LogOut, Download } from "lucide-react";
 import { logout } from "@/app/auth-actions";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Logo from "@/components/Logo";
@@ -11,11 +11,6 @@ import Logo from "@/components/Logo";
 export default function TopNavbar({ isAuthenticated, user }) {
   const pathname = usePathname();
   const [showConfirm, setShowConfirm] = useState(false);
-
-  if (pathname.startsWith("/login") || pathname.startsWith("/revert-email")) {
-    return null;
-  }
-
   const [isNative, setIsNative] = useState(false);
 
   useEffect(() => {
@@ -27,6 +22,10 @@ export default function TopNavbar({ isAuthenticated, user }) {
       }
     }
   }, []);
+
+  if (pathname.startsWith("/login") || pathname.startsWith("/revert-email")) {
+    return null;
+  }
 
   const navItems = [];
 
@@ -93,7 +92,16 @@ export default function TopNavbar({ isAuthenticated, user }) {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              {!isNative && (
+                <Link 
+                  href="/download"
+                  className="md:hidden flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                  title="Download App"
+                >
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Link>
+              )}
               <Link 
                 href="/login"
                 className="text-base font-semibold text-foreground/80 hover:text-foreground transition-colors hidden sm:block"
