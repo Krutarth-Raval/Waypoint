@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, MapPin, CheckSquare, LogOut, User, Download } from "lucide-react";
@@ -15,17 +15,15 @@ export default function Navigation({ user }) {
   const [isNative, setIsNative] = useState(false);
 
   // Check if we are running in the Capacitor app or PWA
-  import('react').then(({ useEffect }) => {
-    useEffect(() => {
-      if (typeof window !== 'undefined') {
-        const isCapacitor = window.Capacitor?.isNativePlatform();
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-        if (isCapacitor || isStandalone) {
-          setIsNative(true);
-        }
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isCapacitor = window.Capacitor?.isNativePlatform();
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      if (isCapacitor || isStandalone) {
+        setIsNative(true);
       }
-    }, []);
-  });
+    }
+  }, []);
 
   const navItems = [
     { href: "/", label: "Now", icon: Home },
