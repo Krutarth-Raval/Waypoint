@@ -13,7 +13,7 @@ export default function DownloadPage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
         
         {/* Android */}
         <div className="bg-card/50 backdrop-blur-xl border border-border rounded-[2rem] p-8 flex flex-col items-center text-center shadow-lg hover:shadow-xl transition-all relative overflow-hidden group">
