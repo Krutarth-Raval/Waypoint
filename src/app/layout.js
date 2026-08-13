@@ -3,6 +3,7 @@ import Navigation from "@/components/layout/Navigation";
 import TopNavbar from "@/components/layout/TopNavbar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import PermissionsModal from "@/components/PermissionsModal";
+import GeofenceInitializer from "@/components/GeofenceInitializer";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -114,6 +115,7 @@ export default async function RootLayout({ children }) {
           <>
             <Navigation user={user} />
             <PermissionsModal />
+            <GeofenceInitializer />
             <main className="flex-1 w-full pb-20 md:pb-0 min-h-[calc(100dvh-4rem)]">
               {children}
             </main>

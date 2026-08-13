@@ -6,6 +6,7 @@ import TaskForm from "@/components/TaskForm";
 import Dropdown from "@/components/Dropdown";
 import TaskCard from "@/components/TaskCard";
 import { completeTask, deleteTask } from "@/app/actions";
+import { syncTasks } from "@/lib/geofenceManager";
 
 export default function TasksClient({ tasks, places }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -14,6 +15,10 @@ export default function TasksClient({ tasks, places }) {
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  useEffect(() => {
+    syncTasks(tasks);
+  }, [tasks]);
 
   function handleFormSuccess() {
     setIsFormOpen(false);

@@ -305,11 +305,20 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
     });
   };
 
+  const [isNative, setIsNative] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      import('@capacitor/core').then(({ Capacitor }) => {
+        setIsNative(Capacitor.isNativePlatform());
+      }).catch(() => {});
+    }
+  }, []);
+
   return (
     <div className="w-full flex flex-col gap-12">
       <div className="flex flex-col gap-2">
         {/* Notification Status Banner */}
-        {notificationPermission === 'default' && !locationError && !isLocating && (
+        {notificationPermission === 'default' && !isNative && !locationError && !isLocating && (
           <div className="w-full rounded-2xl py-3 px-5 flex flex-col md:flex-row items-center justify-between gap-4 border shadow-sm backdrop-blur-md bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400">
             <div className="flex items-center gap-3 text-sm font-medium">
               <BellRing className="w-5 h-5 shrink-0" />
@@ -323,30 +332,22 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
             </button>
           </div>
         )}
-      {/* Location Status Banner - Compact One Liner */}
-      {(locationError || isLocating) && (
-        <div className={`w-full rounded-2xl py-3 px-5 flex flex-col md:flex-row items-center justify-between gap-4 border shadow-sm backdrop-blur-md mb-2 ${locationError ? 'bg-destructive/10 border-destructive/20 text-destructive' : 'bg-primary/5 border-primary/10 text-primary'}`}>
+      {/* Location Status Banner - Only show on error */}
+      {locationError && (
+        <div className={`w-full rounded-2xl py-3 px-5 flex flex-col md:flex-row items-center justify-between gap-4 border shadow-sm backdrop-blur-md mb-2 bg-destructive/10 border-destructive/20 text-destructive`}>
           <div className="flex items-center gap-3 text-sm font-medium">
-            {locationError ? (
-              <AlertTriangle className="w-5 h-5 shrink-0" />
-            ) : (
-              <Loader2 className="w-5 h-5 animate-spin shrink-0" />
-            )}
-            <span>
-              {locationError ? locationError : "Finding your location..."}
-            </span>
-            {locationError && (
-              <button 
-                onClick={requestLocation}
-                className="ml-2 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-md text-xs font-bold hover:bg-destructive/90 transition-colors shadow-sm whitespace-nowrap"
-              >
-                Turn On Location
-              </button>
-            )}
+            <AlertTriangle className="w-5 h-5 shrink-0" />
+            <span>{locationError}</span>
+            <button 
+              onClick={requestLocation}
+              className="ml-2 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-md text-xs font-bold hover:bg-destructive/90 transition-colors shadow-sm whitespace-nowrap"
+            >
+              Turn On Location
+            </button>
           </div>
           
           {/* Security Assurance Badge */}
-          <a href="/privacy" className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold shrink-0 hover:opacity-80 transition-opacity ${locationError ? 'bg-destructive/10' : 'bg-primary/10'}`}>
+          <a href="/privacy" className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold shrink-0 hover:opacity-80 transition-opacity bg-destructive/10">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>100% Secure & Private. Learn more.</span>
           </a>

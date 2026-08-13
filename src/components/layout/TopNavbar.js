@@ -20,6 +20,7 @@ export default function TopNavbar({ isAuthenticated, user }) {
     { href: "/", label: "Now" },
     { href: "/places", label: "Places" },
     { href: "/tasks", label: "Tasks" },
+    { href: "/download", label: "Download App" },
   ];
 
   return (

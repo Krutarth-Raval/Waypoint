@@ -31,6 +31,15 @@ export default function TaskCard({ task, onDelete, isDeleting, isHighlighted = f
 
   async function handleComplete() {
     setIsCompleting(true);
+    
+    if (typeof window !== 'undefined') {
+      const sound = localStorage.getItem('task_done_sound') || 'sound-1';
+      if (sound !== 'none') {
+        const audio = new Audio(`/Sounds/MarkAsRead/${sound}.mp3`);
+        audio.play().catch(e => console.error(e));
+      }
+    }
+
     await completeTask(task.id);
   }
 

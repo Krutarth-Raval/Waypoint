@@ -31,6 +31,27 @@ export default function ProfileClient({ user }) {
   const [deleteError, setDeleteError] = useState(null);
   const deleteInputRefs = useRef([]);
 
+  // Sound Settings State
+  const [taskDoneSound, setTaskDoneSound] = useState('sound-1');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('task_done_sound');
+      if (saved) setTaskDoneSound(saved);
+    }
+  }, []);
+
+  const handleSoundChange = (val) => {
+    setTaskDoneSound(val);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('task_done_sound', val);
+      if (val !== 'none') {
+        const audio = new Audio(`/Sounds/MarkAsRead/${val}.mp3`);
+        audio.play().catch(e => console.error(e));
+      }
+    }
+  };
+
   useEffect(() => {
     const ua = navigator.userAgent;
     let os = 'Unknown Device';
@@ -301,6 +322,32 @@ export default function ProfileClient({ user }) {
                 )}
               </button>
             ))}
+          </div>
+        </section>
+
+        {/* Sound Settings */}
+        <section className="md:col-span-6 bg-white/70 dark:bg-black/50 backdrop-blur-3xl rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-lg border border-border flex flex-col justify-between group overflow-hidden relative">
+          <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-colors pointer-events-none" />
+          <div>
+            <div className="flex items-center gap-3 mb-4 md:mb-6 relative z-10">
+              <div className="p-2 md:p-2.5 bg-indigo-500/10 rounded-2xl">
+                <Bell className="w-5 h-5 md:w-6 md:h-6 text-indigo-500" />
+              </div>
+              <h2 className="text-lg md:text-xl font-bold">Sounds</h2>
+            </div>
+            <p className="text-xs md:text-sm text-muted-foreground mb-6 relative z-10">Choose the sound that plays when you mark a task as done.</p>
+          </div>
+          <div className="relative z-10 mt-auto">
+            <select
+              value={taskDoneSound}
+              onChange={(e) => handleSoundChange(e.target.value)}
+              className="w-full bg-background/50 border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 appearance-none font-semibold text-sm cursor-pointer"
+            >
+              <option value="sound-1">Sound 1 (Default)</option>
+              <option value="sound-2">Sound 2</option>
+              <option value="sound-3">Sound 3</option>
+              <option value="none">None</option>
+            </select>
           </div>
         </section>
 

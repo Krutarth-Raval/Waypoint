@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MapPin, CheckSquare, LogOut, User } from "lucide-react";
+import { Home, MapPin, CheckSquare, LogOut, User, Download } from "lucide-react";
 import { logout } from "@/app/auth-actions";
 
 export default function Navigation({ user }) {
@@ -16,6 +16,7 @@ export default function Navigation({ user }) {
     { href: "/", label: "Now", icon: Home },
     { href: "/places", label: "Places", icon: MapPin },
     { href: "/tasks", label: "Tasks", icon: CheckSquare },
+    { href: "/download", label: "App", icon: Download },
   ];
 
   return (

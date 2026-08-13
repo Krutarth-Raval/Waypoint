@@ -24,47 +24,72 @@ export default function PermissionsModal() {
   };
 
   const handleRequestPermissions = async () => {
-    // Request Notifications
-    const requestNotifications = new Promise(async (resolve) => {
-      if ("Notification" in window) {
+    let isNative = false;
+    try {
+      const { Capacitor } = await import('@capacitor/core');
+      isNative = Capacitor.isNativePlatform();
+    } catch(e) {}
+
+    if (isNative) {
+      try {
+        const { BackgroundGeolocation } = await import('@capgo/background-geolocation');
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        
         setNotificationStatus("loading");
-        try {
-          const permission = await Notification.requestPermission();
-          const finalStatus = permission === "granted" ? "granted" : "denied";
-          setNotificationStatus(finalStatus);
-          resolve(finalStatus);
-        } catch (error) {
+        const notifPerm = await LocalNotifications.requestPermissions();
+        setNotificationStatus(notifPerm.display === 'granted' ? 'granted' : 'denied');
+        
+        setLocationStatus("loading");
+        // BackgroundGeolocation setup requests permissions automatically if needed
+        await BackgroundGeolocation.setupGeofencing({ backgroundLocation: true });
+        setLocationStatus('granted'); // assume granted if setup doesn't throw
+      } catch (error) {
+        setLocationStatus("denied");
+      }
+    } else {
+      // Request Notifications
+      const requestNotifications = new Promise(async (resolve) => {
+        if ("Notification" in window) {
+          setNotificationStatus("loading");
+          try {
+            const permission = await Notification.requestPermission();
+            const finalStatus = permission === "granted" ? "granted" : "denied";
+            setNotificationStatus(finalStatus);
+            resolve(finalStatus);
+          } catch (error) {
+            setNotificationStatus("denied");
+            resolve("denied");
+          }
+        } else {
           setNotificationStatus("denied");
           resolve("denied");
         }
-      } else {
-        setNotificationStatus("denied");
-        resolve("denied");
-      }
-    });
+      });
 
-    // Request Location
-    const requestLocation = new Promise((resolve) => {
-      if ("geolocation" in navigator) {
-        setLocationStatus("loading");
-        navigator.geolocation.getCurrentPosition(
-          (position) => { setLocationStatus("granted"); resolve("granted"); },
-          (error) => { setLocationStatus("denied"); resolve("denied"); }
-        );
-      } else {
-        setLocationStatus("denied");
-        resolve("denied");
-      }
-    });
+      // Request Location
+      const requestLocation = new Promise((resolve) => {
+        if ("geolocation" in navigator) {
+          setLocationStatus("loading");
+          navigator.geolocation.getCurrentPosition(
+            (position) => { setLocationStatus("granted"); resolve("granted"); },
+            (error) => { setLocationStatus("denied"); resolve("denied"); }
+          );
+        } else {
+          setLocationStatus("denied");
+          resolve("denied");
+        }
+      });
 
-    // Wait for both to finish
-    await Promise.all([requestNotifications, requestLocation]);
+      // Wait for both to finish
+      await Promise.all([requestNotifications, requestLocation]);
+    }
 
     // Delay slightly so user can see "Granted" state before it closes
     setTimeout(() => {
       handleFinish();
     }, 1200);
   };
+
 
   if (!show) return null;
 
