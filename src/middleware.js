@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { decrypt } from '@/lib/session';
 
 // Define paths that do not require authentication
-const publicPaths = ['/login', '/', '/revert-email', '/privacy', '/terms', '/contact', '/manifest.webmanifest', '/manifest.json'];
+const publicPaths = ['/login', '/', '/revert-email', '/privacy', '/terms', '/contact', '/manifest.webmanifest', '/manifest.json', '/download'];
 const publicApiPaths = ['/api/auth/login', '/api/auth/verify'];
 
 const allowedOrigins = ['exp://127.0.0.1:8081', 'exp://localhost:8081']; // Update with actual origins if needed
@@ -68,6 +68,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - .png, .jpg, .svg (images)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|apk)$).*)',
   ],
 };
