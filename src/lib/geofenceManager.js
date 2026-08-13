@@ -65,7 +65,7 @@ export async function initGeofencing(tasks) {
         if (currentState !== 'INSIDE') {
           nextState = 'INSIDE';
           // Only notify for OUTSIDE -> INSIDE transition if task wants ARRIVE
-          if (currentState === 'OUTSIDE' && taskInfo && taskInfo.triggerType === 'ARRIVE') {
+          if ((currentState === 'OUTSIDE' || currentState === 'UNKNOWN') && taskInfo && taskInfo.triggerType === 'ARRIVE') {
             shouldNotify = true;
             notificationTitle = `Arrived at ${taskInfo.place.name}`;
             notificationBody = `${taskInfo.title}`;
@@ -75,7 +75,7 @@ export async function initGeofencing(tasks) {
         if (currentState !== 'OUTSIDE') {
           nextState = 'OUTSIDE';
           // Only notify for INSIDE -> OUTSIDE transition if task wants LEAVE
-          if (currentState === 'INSIDE' && taskInfo && taskInfo.triggerType === 'LEAVE') {
+          if ((currentState === 'INSIDE' || currentState === 'UNKNOWN') && taskInfo && taskInfo.triggerType === 'LEAVE') {
             shouldNotify = true;
             notificationTitle = `Left ${taskInfo.place.name}`;
             notificationBody = `${taskInfo.title}`;
@@ -87,6 +87,20 @@ export async function initGeofencing(tasks) {
       saveState(state);
 
       if (shouldNotify && taskInfo) {
+        if (Capacitor.getPlatform() === 'android') {
+          try {
+            await LocalNotifications.createChannel({
+              id: 'geofence_alerts',
+              name: 'Geofence Alerts',
+              description: 'Notifications for arriving and leaving tasks',
+              importance: 4, // High importance
+              visibility: 1, // Public visibility
+            });
+          } catch (e) {
+            console.error('Error creating notification channel:', e);
+          }
+        }
+
         // Trigger local notification
         await LocalNotifications.schedule({
           notifications: [
@@ -94,7 +108,7 @@ export async function initGeofencing(tasks) {
               title: '📍 ' + notificationTitle,
               body: notificationBody,
               id: Math.floor(Math.random() * 1000000), // Random ID for local notification
-              schedule: { at: new Date(Date.now() + 1000) },
+              channelId: 'geofence_alerts',
               sound: null,
               attachments: null,
               actionTypeId: "",
