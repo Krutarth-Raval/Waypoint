@@ -25,7 +25,7 @@ export default function DownloadPage() {
           <p className="text-muted-foreground mb-8 flex-1 relative z-10">
             Get background geofencing and push notifications natively on your Android device.
           </p>
-          <a href="/waypoint.apk" download className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors relative z-10 shadow-lg shadow-green-500/20">
+          <a href="https://github.com/Krutarth-Raval/Waypoint/releases/latest/download/waypoint.apk" className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors relative z-10 shadow-lg shadow-green-500/20">
             <Download className="w-5 h-5" />
             Download APK
           </a>
