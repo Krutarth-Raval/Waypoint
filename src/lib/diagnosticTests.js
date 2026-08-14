@@ -90,10 +90,19 @@ export async function testManualGeofence(taskId, title, placeName, triggerType) 
     console.error('[WaypointGeofence] Failed to inject fake task into storage for test', e);
   }
 
-  // Create fake geofence event
+  // Create fake geofence event matching the actual @capgo/background-geolocation GeofenceTransitionEvent shape
   const fakeEvent = {
     identifier: taskId,
-    transition: 'enter' // Assume enter for test
+    transition: 'enter', // Assume enter for test
+    enter: true,
+    latitude: fakeTask.place.latitude,
+    longitude: fakeTask.place.longitude,
+    radius: fakeTask.place.radiusMeters,
+    payload: {
+      title: title,
+      placeName: placeName,
+      triggerType: triggerType
+    }
   };
 
   await handleGeofenceTransition(fakeEvent);

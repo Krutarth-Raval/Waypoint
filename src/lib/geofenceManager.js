@@ -2,7 +2,10 @@
 
 import { Capacitor } from '@capacitor/core';
 
-let initialized = false;
+let initPromise = null;
+
+// Temporary diagnostic constant to ensure GPS accuracy during tests
+const DIAGNOSTIC_RADIUS_OVERRIDE = 200;
 
 // We use a simple localStorage-based state machine
 const STATE_KEY = 'waypoint_geofence_state';
@@ -23,37 +26,42 @@ function saveState(state) {
   }
 }
 
-export async function initGeofencing(tasks) {
-  if (typeof window === 'undefined') return;
-  if (!Capacitor.isNativePlatform()) return;
-  if (initialized) {
-    if (tasks) syncTasks(tasks);
-    return;
+export function initGeofencing() {
+  if (typeof window === 'undefined') return Promise.resolve();
+  if (!Capacitor.isNativePlatform()) return Promise.resolve();
+  
+  if (initPromise) {
+    return initPromise;
   }
 
-  try {
-    // Dynamic import to avoid Next.js server-side errors
-    const { BackgroundGeolocation } = await import('@capgo/background-geolocation');
-    const { LocalNotifications } = await import('@capacitor/local-notifications');
+  initPromise = (async () => {
+    try {
+      const { BackgroundGeolocation } = await import('@capgo/background-geolocation');
+      
+      await BackgroundGeolocation.setupGeofencing({
+        backgroundLocation: true,
+      });
 
-    // Setup geofencing
-    await BackgroundGeolocation.setupGeofencing({
-      backgroundLocation: true, // Necessary for Android 10+ background
-    });
+      const transitionHandle = await BackgroundGeolocation.addListener('geofenceTransition', handleGeofenceTransition);
+      console.log('[WaypointGeofence] geofenceTransition listener registered successfully:', transitionHandle);
 
-    // Listen for geofence transitions
-    BackgroundGeolocation.addListener('geofenceTransition', handleGeofenceTransition);
+      const errorHandle = await BackgroundGeolocation.addListener('geofenceError', (error) => {
+        console.error('[WaypointGeofence] ERROR');
+        console.error('identifier:', error.identifier);
+        console.error('code:', error.code);
+        console.error('message:', error.message);
+        console.error('domain:', error.domain);
+        console.error('full error:', JSON.stringify(error));
+      });
+      console.log('[WaypointGeofence] geofenceError listener registered successfully:', errorHandle);
 
-    // Listen for geofence errors
-    BackgroundGeolocation.addListener('onGeofenceError', (error) => {
-      console.error('[WaypointGeofence] ERROR received from plugin:', error);
-    });
+    } catch (error) {
+      console.error('[WaypointGeofence] Error initializing geofencing:', error);
+      throw error;
+    }
+  })();
 
-    initialized = true;
-    if (tasks) syncTasks(tasks);
-  } catch (error) {
-    console.error('Error initializing geofencing:', error);
-  }
+  return initPromise;
 }
 
 // Dev helper to test notification UI without walking outside
@@ -97,7 +105,8 @@ if (typeof window !== 'undefined') {
 }
 
 export async function handleGeofenceTransition(event) {
-  console.log('[WaypointGeofence] Transition Received:', event);
+  console.log('[WaypointGeofence] REAL TRANSITION RECEIVED');
+  console.log(JSON.stringify(event, null, 2));
   console.log(`[WaypointGeofence] Transition = ${event.transition}`);
   console.log(`[WaypointGeofence] Identifier = ${event.identifier}`);
 
@@ -209,13 +218,13 @@ export async function syncTasks(tasks) {
   if (!Capacitor.isNativePlatform()) return;
 
   try {
+    // Wait for the initialization promise to finish first to avoid race conditions
+    await initGeofencing();
+
     const { BackgroundGeolocation } = await import('@capgo/background-geolocation');
     
-    // Only monitor active tasks that have a place
     const locationTasks = tasks.filter(t => t.status !== 'COMPLETED' && t.place);
-    
     saveActiveTasksToStorage(locationTasks);
-
     const currentState = getState();
     
     const monitored = await BackgroundGeolocation.getMonitoredGeofences();
@@ -234,15 +243,43 @@ export async function syncTasks(tasks) {
     // Add new or update
     for (const task of locationTasks) {
       const { id, place } = task;
+      
+      console.log(`[WaypointGeofence] Validating task for registration:`);
+      console.log(`task.id: ${id}`);
+      console.log(`task.title: ${task.title}`);
+      console.log(`task.triggerType: ${task.triggerType}`);
+      console.log(`task.place.name: ${place.name}`);
+      console.log(`task.place.latitude: ${place.latitude}`);
+      console.log(`task.place.longitude: ${place.longitude}`);
+      console.log(`task.place.radiusMeters: ${place.radiusMeters}`);
+
+      if (!id || typeof place.latitude !== 'number' || typeof place.longitude !== 'number' || isNaN(place.latitude) || isNaN(place.longitude)) {
+        console.error(`[WaypointGeofence] Validation failed for task ${id}: Invalid coordinates.`);
+        continue;
+      }
+      if (task.triggerType !== 'ARRIVE' && task.triggerType !== 'LEAVE') {
+        console.error(`[WaypointGeofence] Validation failed for task ${id}: Invalid triggerType.`);
+        continue;
+      }
+
       if (!monitoredIds.includes(id)) {
         if (!currentState[id]) {
           currentState[id] = 'UNKNOWN';
         }
+        
+        const radiusToUse = DIAGNOSTIC_RADIUS_OVERRIDE;
+        console.log(`[WaypointGeofence] Registering:`);
+        console.log(`identifier: ${id}`);
+        console.log(`latitude: ${place.latitude}`);
+        console.log(`longitude: ${place.longitude}`);
+        console.log(`radius: ${radiusToUse} (Diagnostic Override)`);
+        console.log(`triggerType: ${task.triggerType}`);
+
         await BackgroundGeolocation.addGeofence({
           identifier: id,
           latitude: place.latitude,
           longitude: place.longitude,
-          radius: place.radiusMeters || 100,
+          radius: radiusToUse,
           notifyOnEntry: true,
           notifyOnExit: true,
           payload: { 
@@ -251,11 +288,19 @@ export async function syncTasks(tasks) {
             triggerType: task.triggerType 
           }
         });
+        
+        // Immediately verify registration
+        const updatedMonitored = await BackgroundGeolocation.getMonitoredGeofences();
+        console.log(`[WaypointGeofence] Currently monitored regions post-add:`, updatedMonitored.regions);
+        
+        if (!updatedMonitored.regions || !updatedMonitored.regions.includes(id)) {
+          console.error(`[WaypointGeofence] ERROR: Task ${id} was not successfully registered by the OS!`);
+        }
       }
     }
     
     saveState(currentState);
   } catch (error) {
-    console.error('Error syncing geofences:', error);
+    console.error('[WaypointGeofence] Error syncing geofences:', error);
   }
 }
