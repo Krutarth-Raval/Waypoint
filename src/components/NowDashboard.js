@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { CheckCircle, MapPin, Loader2, Navigation, AlertTriangle, ShieldCheck, Sun, Trash2, Bell, BellRing } from "lucide-react";
 import { completeTask, deleteTask } from "@/app/actions";
 import TaskCard from "@/components/TaskCard";
+import DiagnosticPanel from "@/components/DiagnosticPanel";
 
 // Haversine formula to calculate distance between two coordinates in meters
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -318,6 +319,8 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
 
   return (
     <div className="w-full flex flex-col gap-12">
+      <DiagnosticPanel />
+      
       <div className="flex flex-col gap-2">
         {/* Notification Status Banner */}
         {notificationPermission === 'default' && !isNative && !locationError && !isLocating && (

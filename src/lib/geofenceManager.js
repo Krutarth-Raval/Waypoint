@@ -42,81 +42,11 @@ export async function initGeofencing(tasks) {
     });
 
     // Listen for geofence transitions
-    BackgroundGeolocation.addListener('geofenceTransition', async (event) => {
-      console.log('Geofence Transition Received:', event);
-      // event.identifier is the task ID
-      // event.transition is 'ENTER' or 'EXIT'
+    BackgroundGeolocation.addListener('geofenceTransition', handleGeofenceTransition);
 
-      const state = getState();
-      const taskId = event.identifier;
-      const currentState = state[taskId] || 'UNKNOWN';
-      const isEntering = event.transition === 'enter' || event.transition === 'ENTER';
-
-      // Ensure the task still exists and gets its info for the notification
-      const activeTasks = getActiveTasksFromStorage();
-      const taskInfo = activeTasks.find(t => t.id === taskId);
-      
-      let nextState = currentState;
-      let shouldNotify = false;
-      let notificationBody = '';
-      let notificationTitle = '';
-
-      if (isEntering) {
-        if (currentState !== 'INSIDE') {
-          nextState = 'INSIDE';
-          // Only notify for OUTSIDE -> INSIDE transition if task wants ARRIVE
-          if ((currentState === 'OUTSIDE' || currentState === 'UNKNOWN') && taskInfo && taskInfo.triggerType === 'ARRIVE') {
-            shouldNotify = true;
-            notificationTitle = `Arrived at ${taskInfo.place.name}`;
-            notificationBody = `${taskInfo.title}`;
-          }
-        }
-      } else { // EXIT
-        if (currentState !== 'OUTSIDE') {
-          nextState = 'OUTSIDE';
-          // Only notify for INSIDE -> OUTSIDE transition if task wants LEAVE
-          if ((currentState === 'INSIDE' || currentState === 'UNKNOWN') && taskInfo && taskInfo.triggerType === 'LEAVE') {
-            shouldNotify = true;
-            notificationTitle = `Left ${taskInfo.place.name}`;
-            notificationBody = `${taskInfo.title}`;
-          }
-        }
-      }
-
-      state[taskId] = nextState;
-      saveState(state);
-
-      if (shouldNotify && taskInfo) {
-        if (Capacitor.getPlatform() === 'android') {
-          try {
-            await LocalNotifications.createChannel({
-              id: 'geofence_alerts',
-              name: 'Geofence Alerts',
-              description: 'Notifications for arriving and leaving tasks',
-              importance: 4, // High importance
-              visibility: 1, // Public visibility
-            });
-          } catch (e) {
-            console.error('Error creating notification channel:', e);
-          }
-        }
-
-        // Trigger local notification
-        await LocalNotifications.schedule({
-          notifications: [
-            {
-              title: '📍 ' + notificationTitle,
-              body: notificationBody,
-              id: Math.floor(Math.random() * 1000000), // Random ID for local notification
-              channelId: 'geofence_alerts',
-              sound: null,
-              attachments: null,
-              actionTypeId: "",
-              extra: null
-            }
-          ]
-        });
-      }
+    // Listen for geofence errors
+    BackgroundGeolocation.addListener('onGeofenceError', (error) => {
+      console.error('[WaypointGeofence] ERROR received from plugin:', error);
     });
 
     initialized = true;
@@ -164,6 +94,96 @@ export async function testNotification() {
 
 if (typeof window !== 'undefined') {
   window.testGeofenceNotification = testNotification;
+}
+
+export async function handleGeofenceTransition(event) {
+  console.log('[WaypointGeofence] Transition Received:', event);
+  console.log(`[WaypointGeofence] Transition = ${event.transition}`);
+  console.log(`[WaypointGeofence] Identifier = ${event.identifier}`);
+
+  try {
+    const state = getState();
+    const taskId = event.identifier;
+    const currentState = state[taskId] || 'UNKNOWN';
+    const isEntering = event.transition === 'enter' || event.transition === 'ENTER';
+
+    const activeTasks = getActiveTasksFromStorage();
+    const taskInfo = activeTasks.find(t => t.id === taskId);
+    
+    if (!taskInfo) {
+      console.log('[WaypointGeofence] Task not found in active tasks storage. Aborting notification.');
+      return;
+    }
+
+    let nextState = currentState;
+    let shouldNotify = false;
+    let notificationBody = '';
+    let notificationTitle = '';
+
+    if (isEntering) {
+      if (currentState !== 'INSIDE') {
+        nextState = 'INSIDE';
+        if ((currentState === 'OUTSIDE' || currentState === 'UNKNOWN') && taskInfo.triggerType === 'ARRIVE') {
+          shouldNotify = true;
+          notificationTitle = `Arrived at ${taskInfo.place.name}`;
+          notificationBody = `${taskInfo.title}`;
+        }
+      }
+    } else { // EXIT
+      if (currentState !== 'OUTSIDE') {
+        nextState = 'OUTSIDE';
+        if ((currentState === 'INSIDE' || currentState === 'UNKNOWN') && taskInfo.triggerType === 'LEAVE') {
+          shouldNotify = true;
+          notificationTitle = `Left ${taskInfo.place.name}`;
+          notificationBody = `${taskInfo.title}`;
+        }
+      }
+    }
+
+    state[taskId] = nextState;
+    saveState(state);
+
+    if (shouldNotify) {
+      console.log('[WaypointNotification] Creating notification...');
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+
+      if (Capacitor.getPlatform() === 'android') {
+        try {
+          console.log('[WaypointNotification] Creating Android channel geofence_alerts');
+          await LocalNotifications.createChannel({
+            id: 'geofence_alerts',
+            name: 'Geofence Alerts',
+            description: 'Notifications for arriving and leaving tasks',
+            importance: 4,
+            visibility: 1,
+          });
+        } catch (e) {
+          console.error('[WaypointNotification] Error creating notification channel:', e);
+        }
+      }
+
+      console.log('[WaypointNotification] Scheduling notification via LocalNotifications.schedule()');
+      const result = await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: '📍 ' + notificationTitle,
+            body: notificationBody,
+            id: Math.floor(Math.random() * 1000000),
+            channelId: 'geofence_alerts',
+            sound: null,
+            attachments: null,
+            actionTypeId: "",
+            extra: null
+          }
+        ]
+      });
+      console.log('[WaypointNotification] Notification sent result:', result);
+    } else {
+      console.log('[WaypointGeofence] Transition ignored (no notification needed).');
+    }
+  } catch (error) {
+    console.error('[WaypointGeofence] Error handling transition:', error);
+  }
 }
 
 const TASKS_KEY = 'waypoint_active_tasks';
