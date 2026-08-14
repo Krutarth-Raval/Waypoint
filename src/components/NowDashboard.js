@@ -47,13 +47,24 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
     }
   }, []);
 
+  const compareVersions = (v1, v2) => {
+    const parts1 = v1.split('.').map(Number);
+    const parts2 = v2.split('.').map(Number);
+    for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+      const num1 = parts1[i] || 0;
+      const num2 = parts2[i] || 0;
+      if (num1 > num2) return 1;
+      if (num1 < num2) return -1;
+    }
+    return 0;
+  };
+
   const checkForUpdates = async (currentVersion) => {
     try {
       const res = await fetch('/api/version');
       const data = await res.json();
       if (data.version && currentVersion) {
-        // Simple version comparison (assumes format like 1.0.0)
-        if (data.version !== currentVersion) {
+        if (compareVersions(data.version, currentVersion) > 0) {
           setUpdateAvailable(true);
         }
       }
