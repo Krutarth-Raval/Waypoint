@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { CheckCircle, MapPin, Loader2, Navigation, AlertTriangle, ShieldCheck, Sun, Trash2, Bell, BellRing } from "lucide-react";
 import { completeTask, deleteTask } from "@/app/actions";
 import TaskCard from "@/components/TaskCard";
-import DiagnosticPanel from "@/components/DiagnosticPanel";
 import { syncTasks } from "@/lib/geofenceManager";
 
 // Haversine formula to calculate distance between two coordinates in meters
@@ -28,14 +27,39 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
   const [locationError, setLocationError] = useState(null);
   const [isLocating, setIsLocating] = useState(true);
 
-  const [isNative, setIsNative] = useState(false);
+  const [appVersion, setAppVersion] = useState(null);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       import('@capacitor/core').then(({ Capacitor }) => {
         setIsNative(Capacitor.isNativePlatform());
+        if (Capacitor.isNativePlatform()) {
+          import('@capacitor/app').then(({ App }) => {
+            App.getInfo().then(info => {
+              setAppVersion(info.version);
+              checkForUpdates(info.version);
+            });
+          }).catch(() => {});
+        }
       }).catch(() => {});
     }
   }, []);
+
+  const checkForUpdates = async (currentVersion) => {
+    try {
+      const res = await fetch('/api/version');
+      const data = await res.json();
+      if (data.version && currentVersion) {
+        // Simple version comparison (assumes format like 1.0.0)
+        if (data.version !== currentVersion) {
+          setUpdateAvailable(true);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to check for updates", e);
+    }
+  };
 
   useEffect(() => {
     syncTasks(tasks).catch(() => {});
@@ -324,7 +348,6 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
 
   return (
     <div className="w-full flex flex-col gap-12">
-      <DiagnosticPanel />
       
       <div className="flex flex-col gap-2">
         {/* Notification Status Banner */}
@@ -364,6 +387,39 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
         </div>
       )}
       </div>
+
+      {/* App Update Popup */}
+      {updateAvailable && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-blue-500/10 text-blue-400 rounded-full flex items-center justify-center mb-4">
+                <Sun className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Update Available!</h3>
+              <p className="text-zinc-400 mb-6 text-sm">
+                A new version of Waypoint is available with improved geofencing and new features. Download it now to get the best experience.
+              </p>
+              
+              <div className="flex gap-3 w-full">
+                <button 
+                  onClick={() => setUpdateAvailable(false)}
+                  className="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all"
+                >
+                  Later
+                </button>
+                <a 
+                  href="/download"
+                  className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all flex items-center justify-center"
+                >
+                  Update Now
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Render the Hero Greeting Card here */}
       <section className="mb-6 relative col-span-1 md:col-span-12 z-10">
