@@ -50,7 +50,7 @@ export async function initGeofencing(tasks) {
       const state = getState();
       const taskId = event.identifier;
       const currentState = state[taskId] || 'UNKNOWN';
-      const isEntering = event.transition === 'ENTER';
+      const isEntering = event.transition === 'enter' || event.transition === 'ENTER';
 
       // Ensure the task still exists and gets its info for the notification
       const activeTasks = getActiveTasksFromStorage();
@@ -199,7 +199,7 @@ export async function syncTasks(tasks) {
     const currentState = getState();
     
     const monitored = await BackgroundGeolocation.getMonitoredGeofences();
-    const monitoredIds = monitored.geofences.map(g => g.identifier);
+    const monitoredIds = monitored.regions || [];
     
     const targetIds = locationTasks.map(t => t.id);
 
@@ -225,6 +225,11 @@ export async function syncTasks(tasks) {
           radius: place.radiusMeters || 100,
           notifyOnEntry: true,
           notifyOnExit: true,
+          payload: { 
+            title: task.title, 
+            placeName: place.name, 
+            triggerType: task.triggerType 
+          }
         });
       }
     }

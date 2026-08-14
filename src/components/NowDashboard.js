@@ -26,6 +26,15 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
   const [locationError, setLocationError] = useState(null);
   const [isLocating, setIsLocating] = useState(true);
 
+  const [isNative, setIsNative] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      import('@capacitor/core').then(({ Capacitor }) => {
+        setIsNative(Capacitor.isNativePlatform());
+      }).catch(() => {});
+    }
+  }, []);
+
   // Notification State
   const [notificationPermission, setNotificationPermission] = useState('default');
   const prevNearbyTaskIds = useRef(new Set());
@@ -201,7 +210,7 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
       return;
     }
 
-    if (notificationPermission === 'granted') {
+    if (notificationPermission === 'granted' && !isNative) {
       // Check for newly entered tasks
       nearbyTasks.forEach(task => {
         if (!prevNearbyTaskIds.current.has(task.id) && task.triggerType === 'ARRIVE') {
@@ -230,7 +239,7 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
     }
 
     prevNearbyTaskIds.current = currentNearbyTaskIds;
-  }, [nearbyTasks, elsewhereTasks, currentLocation, notificationPermission]);
+  }, [nearbyTasks, elsewhereTasks, currentLocation, notificationPermission, isNative]);
 
   // Group tasks by place
   function groupTasksByPlace(taskList) {
@@ -305,14 +314,7 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
     });
   };
 
-  const [isNative, setIsNative] = useState(false);
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      import('@capacitor/core').then(({ Capacitor }) => {
-        setIsNative(Capacitor.isNativePlatform());
-      }).catch(() => {});
-    }
-  }, []);
+
 
   return (
     <div className="w-full flex flex-col gap-12">
