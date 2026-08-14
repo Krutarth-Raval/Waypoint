@@ -5,6 +5,7 @@ import { CheckCircle, MapPin, Loader2, Navigation, AlertTriangle, ShieldCheck, S
 import { completeTask, deleteTask } from "@/app/actions";
 import TaskCard from "@/components/TaskCard";
 import DiagnosticPanel from "@/components/DiagnosticPanel";
+import { syncTasks } from "@/lib/geofenceManager";
 
 // Haversine formula to calculate distance between two coordinates in meters
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -35,6 +36,10 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
       }).catch(() => {});
     }
   }, []);
+
+  useEffect(() => {
+    syncTasks(tasks).catch(() => {});
+  }, [tasks]);
 
   // Notification State
   const [notificationPermission, setNotificationPermission] = useState('default');

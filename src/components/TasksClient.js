@@ -17,7 +17,11 @@ export default function TasksClient({ tasks, places }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
-    syncTasks(tasks);
+    console.log(`[WaypointGeofence] TasksClient received tasks: ${tasks?.length || 0}`);
+    console.log('[WaypointGeofence] Starting geofence synchronization');
+    syncTasks(tasks).then(() => {
+      console.log('[WaypointGeofence] Geofence synchronization completed');
+    });
   }, [tasks]);
 
   function handleFormSuccess() {

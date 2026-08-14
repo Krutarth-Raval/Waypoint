@@ -4,8 +4,33 @@ import { Capacitor } from '@capacitor/core';
 
 let initPromise = null;
 
-// Temporary diagnostic constant to ensure GPS accuracy during tests
-const DIAGNOSTIC_RADIUS_OVERRIDE = 200;
+// Haversine formula
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const p1 = (lat1 * Math.PI) / 180;
+  const p2 = (lat2 * Math.PI) / 180;
+  const dp = ((lat2 - lat1) * Math.PI) / 180;
+  const dl = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a = Math.sin(dp / 2) * Math.sin(dp / 2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+
+function getCurrentLocation() {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      resolve(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
+  });
+}
 
 // We use a simple localStorage-based state machine
 const STATE_KEY = 'waypoint_geofence_state';
@@ -263,17 +288,27 @@ export async function syncTasks(tasks) {
       }
 
       if (!monitoredIds.includes(id)) {
-        if (!currentState[id]) {
-          currentState[id] = 'UNKNOWN';
+        if (!currentState[id] || currentState[id] === 'UNKNOWN') {
+          // Pre-seed state using current GPS if possible
+          const currentLoc = await getCurrentLocation();
+          if (currentLoc) {
+            const dist = getDistance(currentLoc.latitude, currentLoc.longitude, place.latitude, place.longitude);
+            currentState[id] = dist <= (place.radiusMeters || 100) ? 'INSIDE' : 'OUTSIDE';
+          } else {
+            currentState[id] = 'UNKNOWN';
+          }
         }
         
-        const radiusToUse = DIAGNOSTIC_RADIUS_OVERRIDE;
-        console.log(`[WaypointGeofence] Registering:`);
-        console.log(`identifier: ${id}`);
+        const radiusToUse = place.radiusMeters || 100;
+        console.log(`[WaypointGeofence] REAL TASK REGISTRATION`);
+        console.log(`task.id: ${id}`);
+        console.log(`task.title: ${task.title}`);
+        console.log(`task.triggerType: ${task.triggerType}`);
+        console.log(`place.id: ${place.id}`);
+        console.log(`place.name: ${place.name}`);
         console.log(`latitude: ${place.latitude}`);
         console.log(`longitude: ${place.longitude}`);
-        console.log(`radius: ${radiusToUse} (Diagnostic Override)`);
-        console.log(`triggerType: ${task.triggerType}`);
+        console.log(`radius: ${radiusToUse}`);
 
         await BackgroundGeolocation.addGeofence({
           identifier: id,
