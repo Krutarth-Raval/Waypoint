@@ -29,6 +29,7 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
 
   const [appVersion, setAppVersion] = useState(null);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [isNative, setIsNative] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
