@@ -110,6 +110,7 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
   
   const [currentDate, setCurrentDate] = useState("");
   const [currentTime, setCurrentTime] = useState("");
+  const [localGreeting, setLocalGreeting] = useState(greeting);
 
   async function confirmDelete() {
     if (!taskToDelete) return;
@@ -124,6 +125,9 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
       const now = new Date();
       setCurrentDate(now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }));
       setCurrentTime(now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }));
+      
+      const hour = now.getHours();
+      setLocalGreeting(hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening");
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
@@ -438,7 +442,7 @@ export default function NowDashboard({ tasks, greeting, firstName }) {
         <div className="absolute -inset-4 bg-primary/20 rounded-[3rem] blur-3xl opacity-40 pointer-events-none" />
         <div className="relative bg-white/70 dark:bg-black/50 backdrop-blur-3xl rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-xl border border-border flex flex-row items-center justify-between gap-4">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.15]">
-            {greeting},<br /><span className="text-primary">{firstName}</span>.
+            {localGreeting},<br /><span className="text-primary">{firstName}</span>.
           </h1>
           
           {currentTime && (
