@@ -9,12 +9,23 @@ export default function manifest() {
     theme_color: '#10b981', // emerald green
     icons: [
       {
-        src: '/icon.png',
+        src: '/logo-icon.png',
+        sizes: '192x192',
+        type: 'image/png',
+      },
+      {
+        src: '/logo-icon.png',
         sizes: '512x512',
         type: 'image/png',
       },
       {
-        src: '/apple-icon.png',
+        src: '/logo-icon.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+      {
+        src: '/logo-icon.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'apple touch icon',
