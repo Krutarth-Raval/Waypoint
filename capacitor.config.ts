@@ -7,12 +7,7 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://waypoint-tasks.vercel.app',
     cleartext: true
-  },
-  plugins: {
-    CapacitorCookies: {
-      enabled: true,
-    },
-  },
+  }
 };
 
 export default config;
